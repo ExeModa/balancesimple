@@ -61,7 +61,7 @@ La app es un único archivo HTML autocontenido. No requiere instalación ni depe
 
 ### Opción A — Versión desplegada (recomendada)
 
-Accedé a la app en: **[URL del deploy en Netlify]**
+Accedé a la app en: **https://stupendous-jalebi-a78dd2.netlify.app/**
 
 > ⚠️ La app requiere una API key de Anthropic para funcionar. Si la usás desde el deploy propio, asegurate de tener configurada la autenticación.
 
