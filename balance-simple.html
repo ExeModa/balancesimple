@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BalanceSimple — Tu balance en palabras claras</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --ink: #1a1a2e;
+  --ink-light: #4a4a6a;
+  --paper: #f7f6f2;
+  --paper-dark: #ece9e2;
+  --accent: #2563eb;
+  --accent-soft: #dbeafe;
+  --ok: #16a34a;
+  --ok-soft: #dcfce7;
+  --warn: #d97706;
+  --warn-soft: #fef3c7;
+  --danger: #dc2626;
+  --danger-soft: #fee2e2;
+  --border: #d4d0c8;
+  --radius: 10px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--ink);
+  color: #fff;
+  padding: 28px 40px 24px;
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+}
+.logo-block { flex: 1; }
+.logo-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #8888aa;
+  margin-bottom: 4px;
+}
+.logo-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: 2rem;
+  line-height: 1;
+  color: #fff;
+}
+.logo-name em { font-style: italic; color: #93c5fd; }
+.logo-tagline {
+  font-size: 12px;
+  color: #8888aa;
+  margin-top: 6px;
+  font-weight: 300;
+}
+.header-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  background: #2563eb22;
+  border: 1px solid #2563eb55;
+  color: #93c5fd;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+/* ── MAIN ── */
+main {
+  flex: 1;
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 48px 24px;
+  width: 100%;
+}
+
+/* ── MODEL SELECTOR ── */
+.model-section {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+.model-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.upload-label {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-light);
+  display: block;
+}
+.model-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+@media (max-width: 520px) { .model-grid { grid-template-columns: 1fr; } }
+
+.model-card {
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  background: transparent;
+}
+.model-card:hover { border-color: var(--accent); background: var(--accent-soft); }
+.model-card.selected { border-color: var(--accent); background: var(--accent-soft); }
+
+.model-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+.model-badge.free { background: var(--ok-soft); color: var(--ok); }
+.model-badge.paid { background: var(--warn-soft); color: var(--warn); }
+
+.model-info { flex: 1; min-width: 0; }
+.model-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.model-desc { font-size: 11px; color: var(--ink-light); line-height: 1.4; }
+
+.model-used-note {
+  display: none;
+  font-size: 11px;
+  color: var(--ink-light);
+  margin-top: 10px;
+  font-style: italic;
+}
+.model-used-note.visible { display: block; }
+
+/* ── UPLOAD ZONE ── */
+.upload-section { margin-bottom: 32px; }
+.upload-label-block { margin-bottom: 10px; }
+
+.drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+  padding: 48px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  position: relative;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.drop-zone input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.drop-icon { font-size: 2.5rem; margin-bottom: 12px; display: block; }
+.drop-text-main {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.1rem;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.drop-text-sub { font-size: 12px; color: var(--ink-light); }
+
+.file-selected {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  padding: 16px;
+  background: var(--ok-soft);
+  border: 2px solid var(--ok);
+  border-radius: var(--radius);
+}
+.file-selected.visible { display: flex; }
+.file-selected-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--ok);
+  font-weight: 500;
+}
+
+/* ── BUTTON ── */
+.btn-analyze {
+  width: 100%;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 16px 24px;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  margin-top: 16px;
+  letter-spacing: 0.02em;
+}
+.btn-analyze:hover:not(:disabled) { background: #1d4ed8; }
+.btn-analyze:active:not(:disabled) { transform: scale(0.99); }
+.btn-analyze:disabled { background: #93c5fd; cursor: not-allowed; }
+
+/* ── LOADING ── */
+.loading-bar {
+  display: none;
+  margin-top: 20px;
+  background: var(--paper-dark);
+  border-radius: 4px;
+  height: 4px;
+  overflow: hidden;
+}
+.loading-bar.active { display: block; }
+.loading-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+  animation: load 2.5s ease-in-out infinite;
+  width: 40%;
+}
+@keyframes load {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}
+.loading-msg {
+  display: none;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-light);
+  margin-top: 10px;
+  font-style: italic;
+}
+.loading-msg.active { display: block; }
+
+/* ── ERROR ── */
+.error-box {
+  display: none;
+  background: var(--danger-soft);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--danger);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+.error-box.visible { display: block; }
+
+/* ── RESULTS ── */
+#results { display: none; }
+#results.visible { display: block; }
+
+.results-divider {
+  border: none;
+  border-top: 2px solid var(--border);
+  margin: 40px 0;
+}
+.results-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.results-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.6rem;
+  color: var(--ink);
+}
+.results-subtitle {
+  font-size: 12px;
+  color: var(--ink-light);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* ── ALERTS ── */
+.alerts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 32px;
+}
+.alert-card {
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  border-left: 4px solid;
+}
+.alert-card.ok     { background: var(--ok-soft);     border-color: var(--ok); }
+.alert-card.warn   { background: var(--warn-soft);   border-color: var(--warn); }
+.alert-card.danger { background: var(--danger-soft); border-color: var(--danger); }
+
+.alert-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.alert-card.ok .alert-label     { color: var(--ok); }
+.alert-card.warn .alert-label   { color: var(--warn); }
+.alert-card.danger .alert-label { color: var(--danger); }
+
+.alert-name  { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+.alert-value { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 500; margin-bottom: 4px; }
+.alert-desc  { font-size: 12px; color: var(--ink-light); line-height: 1.4; }
+
+/* ── NARRATIVE ── */
+.narrative-block {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 32px;
+  margin-bottom: 24px;
+}
+.narrative-block h3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.1rem;
+  margin-bottom: 14px;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.narrative-block p, .narrative-block li {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+.narrative-block ul { padding-left: 18px; margin-top: 8px; }
+.narrative-block li { margin-bottom: 6px; }
+
+/* ── RECOMMENDATIONS ── */
+.recommendations {
+  background: var(--ink);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 28px 32px;
+  margin-bottom: 24px;
+}
+.recommendations h3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.1rem;
+  margin-bottom: 14px;
+  color: #93c5fd;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.recommendations p, .recommendations li {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #d1d5db;
+}
+.recommendations ul { padding-left: 18px; margin-top: 8px; }
+.recommendations li { margin-bottom: 6px; }
+
+/* ── DISCLAIMER ── */
+.disclaimer {
+  font-size: 11px;
+  color: var(--ink-light);
+  text-align: center;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--paper-dark);
+  line-height: 1.6;
+}
+
+/* ── RESET ── */
+.btn-reset {
+  display: block;
+  margin: 24px auto 0;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--ink-light);
+  padding: 10px 24px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 13px;
+  transition: border-color 0.2s, color 0.2s;
+}
+.btn-reset:hover { border-color: var(--accent); color: var(--accent); }
+
+footer {
+  text-align: center;
+  padding: 24px;
+  font-size: 11px;
+  color: var(--ink-light);
+  border-top: 1px solid var(--border);
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-block">
+    <div class="logo-eyebrow">Herramienta para estudios contables</div>
+    <div class="logo-name">Balance<em>Simple</em></div>
+    <div class="logo-tagline">Tu balance en palabras que cualquiera entiende</div>
+  </div>
+  <div class="header-badge">IA · OpenRouter</div>
+</header>
+
+<main>
+
+  <!-- MODEL SELECTOR -->
+  <div class="model-section">
+    <div class="model-section-header">
+      <label class="upload-label">Elegí el modelo de IA</label>
+    </div>
+    <div class="model-grid" id="modelGrid"></div>
+    <div class="model-used-note" id="modelUsedNote"></div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div class="upload-section">
+    <label class="upload-label upload-label-block">Subí el balance en PDF</label>
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="fileInput" accept=".pdf" />
+      <span class="drop-icon">📄</span>
+      <div class="drop-text-main">Arrastrá el PDF acá o hacé click para elegirlo</div>
+      <div class="drop-text-sub">Balance general, estado de resultados o ambos · Máx. 10 MB</div>
+    </div>
+    <div class="file-selected" id="fileSelected">
+      <span>✅</span>
+      <span class="file-selected-name" id="fileName">—</span>
+    </div>
+  </div>
+
+  <button class="btn-analyze" id="btnAnalyze" disabled onclick="analyzeBalance()">
+    Analizar balance →
+  </button>
+
+  <div class="loading-bar" id="loadingBar"><div class="loading-fill"></div></div>
+  <div class="loading-msg" id="loadingMsg">La IA está leyendo tu balance… puede tardar unos segundos.</div>
+  <div class="error-box" id="errorBox"></div>
+
+  <hr class="results-divider" id="resultsDivider" style="display:none" />
+
+  <section id="results">
+    <div class="results-header">
+      <span class="results-title">Diagnóstico de tu empresa</span>
+      <span class="results-subtitle">generado por IA</span>
+    </div>
+    <div class="alerts-grid" id="alertsGrid"></div>
+    <div class="narrative-block" id="narrativeBlock"></div>
+    <div class="recommendations" id="recoBlock"></div>
+    <div class="disclaimer">
+      ⚠️ Este análisis es orientativo y fue generado por inteligencia artificial a partir del documento subido.
+      No reemplaza el criterio de un contador matriculado. Consultá siempre a tu profesional de confianza
+      antes de tomar decisiones financieras.
+    </div>
+    <button class="btn-reset" onclick="resetApp()">← Analizar otro balance</button>
+  </section>
+
+</main>
+
+<footer>
+  BalanceSimple · Trabajo Final Integrador · Diplomatura en IA Aplicada · FCE-UBA 2026
+</footer>
+
+<script>
+// ── MODEL DEFINITIONS ──────────────────────────────────────────────────────
+const MODELS = [
+  {
+    id: "google/gemini-2.0-flash-exp:free",
+    name: "Gemini 2.0 Flash",
+    desc: "Recomendado · Rápido, contexto amplio",
+    tier: "free",
+    default: true,
+  },
+  {
+    id: "meta-llama/llama-3.3-70b-instruct:free",
+    name: "Llama 3.3 70B",
+    desc: "Muy capaz · Alta precisión",
+    tier: "free",
+  },
+  {
+    id: "anthropic/claude-sonnet-4-5",
+    name: "Claude Sonnet 4.5",
+    desc: "Alta precisión · Uso de créditos",
+    tier: "paid",
+  },
+  {
+    id: "openai/gpt-4o",
+    name: "GPT-4o",
+    desc: "Referencia del sector · Uso de créditos",
+    tier: "paid",
+  },
+];
+
+let selectedModel = MODELS.find((m) => m.default)?.id || MODELS[0].id;
+let selectedFile = null;
+
+// ── BUILD MODEL SELECTOR ────────────────────────────────────────────────────
+function buildModelGrid() {
+  const grid = document.getElementById("modelGrid");
+  grid.innerHTML = "";
+  MODELS.forEach((m) => {
+    const card = document.createElement("button");
+    card.className = "model-card" + (m.id === selectedModel ? " selected" : "");
+    card.setAttribute("type", "button");
+    card.dataset.id = m.id;
+    card.innerHTML = `
+      <span class="model-badge ${m.tier}">${m.tier === "free" ? "Gratis" : "Pago"}</span>
+      <span class="model-info">
+        <span class="model-name">${m.name}</span>
+        <span class="model-desc">${m.desc}</span>
+      </span>`;
+    card.addEventListener("click", () => {
+      selectedModel = m.id;
+      document.querySelectorAll(".model-card").forEach((c) => c.classList.remove("selected"));
+      card.classList.add("selected");
+    });
+    grid.appendChild(card);
+  });
+}
+
+// ── DRAG & DROP ─────────────────────────────────────────────────────────────
+const dropZone = document.getElementById("dropZone");
+dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("drag-over"); });
+dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
+dropZone.addEventListener("drop", (e) => {
+  e.preventDefault();
+  dropZone.classList.remove("drag-over");
+  const f = e.dataTransfer.files[0];
+  if (f && f.type === "application/pdf") setFile(f);
+});
+document.getElementById("fileInput").addEventListener("change", (e) => {
+  if (e.target.files[0]) setFile(e.target.files[0]);
+});
+
+function setFile(f) {
+  selectedFile = f;
+  document.getElementById("fileName").textContent = f.name;
+  document.getElementById("fileSelected").classList.add("visible");
+  document.getElementById("btnAnalyze").disabled = false;
+  hideError();
+}
+
+// ── UI HELPERS ───────────────────────────────────────────────────────────────
+function hideError() { document.getElementById("errorBox").classList.remove("visible"); }
+function showError(msg) {
+  const box = document.getElementById("errorBox");
+  box.textContent = msg;
+  box.classList.add("visible");
+}
+function setLoading(active) {
+  document.getElementById("loadingBar").classList.toggle("active", active);
+  document.getElementById("loadingMsg").classList.toggle("active", active);
+  document.getElementById("btnAnalyze").disabled = active;
+}
+
+// ── ANALYZE ──────────────────────────────────────────────────────────────────
+async function analyzeBalance() {
+  if (!selectedFile) return;
+  hideError();
+  setLoading(true);
+  document.getElementById("results").classList.remove("visible");
+  document.getElementById("resultsDivider").style.display = "none";
+  document.getElementById("modelUsedNote").classList.remove("visible");
+
+  try {
+    const pdfBase64 = await fileToBase64(selectedFile);
+
+    const response = await fetch("/.netlify/functions/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pdfBase64, preferredModel: selectedModel }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || `Error del servidor (${response.status})`);
+    }
+
+    // Show which model was actually used (may differ from selected if fallback occurred)
+    const usedModel = MODELS.find((m) => m.id === data.modelUsed);
+    const note = document.getElementById("modelUsedNote");
+    if (usedModel && data.modelUsed !== selectedModel) {
+      note.textContent = `ℹ️ Se usó ${usedModel.name} como alternativa (el modelo seleccionado no estuvo disponible).`;
+      note.classList.add("visible");
+    } else if (usedModel) {
+      note.textContent = `✅ Análisis generado con ${usedModel.name}.`;
+      note.classList.add("visible");
+    }
+
+    renderResults(data.result);
+  } catch (err) {
+    showError("Ocurrió un error al analizar el balance:\n" + err.message +
+      "\n\nVerificá que el PDF sea un balance contable con texto seleccionable (no escaneado sin OCR).");
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function renderResults(data) {
+  const grid = document.getElementById("alertsGrid");
+  grid.innerHTML = "";
+  (data.alerts || []).forEach((a) => {
+    const card = document.createElement("div");
+    card.className = `alert-card ${a.status || "ok"}`;
+    card.innerHTML = `
+      <div class="alert-label">${a.label || a.status}</div>
+      <div class="alert-name">${a.name}</div>
+      <div class="alert-value">${a.value}</div>
+      <div class="alert-desc">${a.description}</div>`;
+    grid.appendChild(card);
+  });
+
+  const narrative = document.getElementById("narrativeBlock");
+  const highlights = (data.highlights || []).map((h) => `<li>${h}</li>`).join("");
+  const concerns   = (data.concerns   || []).map((c) => `<li>${c}</li>`).join("");
+  narrative.innerHTML = `
+    <h3>📊 Panorama general</h3>
+    <p>${data.summary || ""}</p>
+    ${highlights ? `<h3 style="margin-top:18px">✅ Puntos fuertes</h3><ul>${highlights}</ul>` : ""}
+    ${concerns   ? `<h3 style="margin-top:18px">⚠️ Puntos a mejorar</h3><ul>${concerns}</ul>`   : ""}`;
+
+  const recos = document.getElementById("recoBlock");
+  const recoItems = (data.recommendations || []).map((r) => `<li>${r}</li>`).join("");
+  recos.innerHTML = `<h3>💡 Qué hacer ahora</h3><ul>${recoItems}</ul>`;
+
+  document.getElementById("results").classList.add("visible");
+  document.getElementById("resultsDivider").style.display = "block";
+  document.getElementById("results").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// ── RESET ─────────────────────────────────────────────────────────────────────
+function resetApp() {
+  selectedFile = null;
+  document.getElementById("fileInput").value = "";
+  document.getElementById("fileSelected").classList.remove("visible");
+  document.getElementById("results").classList.remove("visible");
+  document.getElementById("resultsDivider").style.display = "none";
+  document.getElementById("modelUsedNote").classList.remove("visible");
+  hideError();
+  document.getElementById("btnAnalyze").disabled = true;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+buildModelGrid();
+</script>
+</body>
+</html>
