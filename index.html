@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>BalanceSimple — Tu balance en palabras claras</title>
+<title>BalanceSimple — Análisis Financiero Experto</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -24,26 +24,10 @@
   --border: #d4d0c8;
   --radius: 10px;
 }
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--paper); color: var(--ink); min-height: 100vh; display: flex; flex-direction: column; }
 
-body {
-  font-family: 'Inter', sans-serif;
-  background: var(--paper);
-  color: var(--ink);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-header {
-  background: var(--ink);
-  color: #fff;
-  padding: 28px 40px 24px;
-  display: flex;
-  align-items: flex-end;
-  gap: 16px;
-}
+header { background: var(--ink); color: #fff; padding: 28px 40px 24px; display: flex; align-items: flex-end; gap: 16px; }
 .logo-block { flex: 1; }
 .logo-eyebrow { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #8888aa; margin-bottom: 4px; }
 .logo-name { font-family: 'DM Serif Display', serif; font-size: 2rem; line-height: 1; color: #fff; }
@@ -51,16 +35,14 @@ header {
 .logo-tagline { font-size: 12px; color: #8888aa; margin-top: 6px; font-weight: 300; }
 .header-badge { font-family: 'JetBrains Mono', monospace; font-size: 10px; background: #2563eb22; border: 1px solid #2563eb55; color: #93c5fd; padding: 4px 10px; border-radius: 4px; }
 
-main { flex: 1; max-width: 780px; margin: 0 auto; padding: 48px 24px; width: 100%; }
+main { flex: 1; max-width: 820px; margin: 0 auto; padding: 48px 24px; width: 100%; }
 
 .model-section { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 24px; }
-.upload-label { font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-light); display: block; }
-.model-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.section-label { font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-light); display: block; margin-bottom: 12px; }
+.model-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 @media (max-width: 520px) { .model-grid { grid-template-columns: 1fr; } }
-
 .model-card { border: 2px solid var(--border); border-radius: 8px; padding: 12px 14px; cursor: pointer; transition: border-color 0.15s, background 0.15s; display: flex; align-items: flex-start; gap: 10px; text-align: left; background: transparent; }
-.model-card:hover { border-color: var(--accent); background: var(--accent-soft); }
-.model-card.selected { border-color: var(--accent); background: var(--accent-soft); }
+.model-card:hover, .model-card.selected { border-color: var(--accent); background: var(--accent-soft); }
 .model-badge { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 2px 6px; border-radius: 3px; white-space: nowrap; margin-top: 2px; flex-shrink: 0; }
 .model-badge.free { background: var(--ok-soft); color: var(--ok); }
 .model-badge.paid { background: var(--warn-soft); color: var(--warn); }
@@ -71,7 +53,6 @@ main { flex: 1; max-width: 780px; margin: 0 auto; padding: 48px 24px; width: 100
 .model-used-note.visible { display: block; }
 
 .upload-section { margin-bottom: 32px; }
-.upload-label-block { margin-bottom: 10px; }
 .drop-zone { border: 2px dashed var(--border); border-radius: var(--radius); background: #fff; padding: 48px 24px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; position: relative; }
 .drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent); background: var(--accent-soft); }
 .drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
@@ -100,37 +81,63 @@ main { flex: 1; max-width: 780px; margin: 0 auto; padding: 48px 24px; width: 100
 #results { display: none; }
 #results.visible { display: block; }
 .results-divider { border: none; border-top: 2px solid var(--border); margin: 40px 0; }
-.results-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 28px; }
-.results-title { font-family: 'DM Serif Display', serif; font-size: 1.6rem; color: var(--ink); }
-.results-subtitle { font-size: 12px; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.1em; }
 
-.alerts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 32px; }
+/* PERIODO HEADER */
+.periodo-header { display: flex; gap: 12px; margin-bottom: 28px; align-items: center; flex-wrap: wrap; }
+.periodo-badge { font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 20px; }
+.periodo-actual { background: var(--accent); color: #fff; }
+.periodo-anterior { background: var(--paper-dark); color: var(--ink-light); border: 1px solid var(--border); }
+.periodo-label { font-family: 'DM Serif Display', serif; font-size: 1.6rem; color: var(--ink); flex: 1; }
+
+/* ALERTS */
+.alerts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 32px; }
 .alert-card { border-radius: var(--radius); padding: 16px 18px; border-left: 4px solid; }
 .alert-card.ok     { background: var(--ok-soft);     border-color: var(--ok); }
 .alert-card.warn   { background: var(--warn-soft);   border-color: var(--warn); }
 .alert-card.danger { background: var(--danger-soft); border-color: var(--danger); }
-.alert-label { font-size: 10px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px; }
+.alert-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+.alert-label { font-size: 10px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; }
 .alert-card.ok .alert-label     { color: var(--ok); }
 .alert-card.warn .alert-label   { color: var(--warn); }
 .alert-card.danger .alert-label { color: var(--danger); }
-.alert-name  { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
-.alert-value { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 500; margin-bottom: 4px; }
+.alert-variacion { font-size: 10px; font-weight: 600; font-family: 'JetBrains Mono', monospace; padding: 2px 6px; border-radius: 3px; background: #00000010; }
+.alert-name  { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+.alert-values { display: flex; gap: 12px; margin-bottom: 6px; align-items: baseline; }
+.alert-value-actual { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 600; }
+.alert-value-anterior { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-light); }
 .alert-desc  { font-size: 12px; color: var(--ink-light); line-height: 1.4; }
 
-.narrative-block { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 32px; margin-bottom: 24px; }
-.narrative-block h3 { font-family: 'DM Serif Display', serif; font-size: 1.1rem; margin-bottom: 14px; color: var(--ink); display: flex; align-items: center; gap: 8px; }
-.narrative-block p, .narrative-block li { font-size: 14px; line-height: 1.7; color: var(--ink); }
-.narrative-block ul { padding-left: 18px; margin-top: 8px; }
-.narrative-block li { margin-bottom: 6px; }
+/* BLOCKS */
+.block { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 32px; margin-bottom: 20px; }
+.block h3 { font-family: 'DM Serif Display', serif; font-size: 1.1rem; margin-bottom: 14px; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+.block p, .block li { font-size: 14px; line-height: 1.7; color: var(--ink); }
+.block ul { padding-left: 18px; margin-top: 8px; }
+.block li { margin-bottom: 6px; }
 
-.recommendations { background: var(--ink); color: #fff; border-radius: var(--radius); padding: 28px 32px; margin-bottom: 24px; }
-.recommendations h3 { font-family: 'DM Serif Display', serif; font-size: 1.1rem; margin-bottom: 14px; color: #93c5fd; display: flex; align-items: center; gap: 8px; }
-.recommendations p, .recommendations li { font-size: 14px; line-height: 1.7; color: #d1d5db; }
-.recommendations ul { padding-left: 18px; margin-top: 8px; }
-.recommendations li { margin-bottom: 6px; }
+/* ALERTAS CRITICAS */
+.block.critico { background: var(--danger-soft); border-color: var(--danger); }
+.block.critico h3 { color: var(--danger); }
+.block.critico li { color: var(--danger); font-weight: 500; }
+
+/* RECOMENDACIONES */
+.recommendations { background: var(--ink); color: #fff; border-radius: var(--radius); padding: 28px 32px; margin-bottom: 20px; }
+.recommendations h3 { font-family: 'DM Serif Display', serif; font-size: 1.1rem; margin-bottom: 16px; color: #93c5fd; }
+.reco-item { border: 1px solid #ffffff15; border-radius: 8px; padding: 16px; margin-bottom: 10px; }
+.reco-item:last-child { margin-bottom: 0; }
+.reco-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.reco-accion { font-size: 14px; font-weight: 600; color: #fff; flex: 1; }
+.reco-plazo { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; white-space: nowrap; margin-left: 10px; }
+.reco-plazo.inmediato { background: #dc262630; color: #fca5a5; }
+.reco-plazo.treinta   { background: #d9770630; color: #fcd34d; }
+.reco-plazo.noventa   { background: #2563eb30; color: #93c5fd; }
+.reco-plazo.seis      { background: #16a34a30; color: #86efac; }
+.reco-impacto { font-size: 12px; color: #9ca3af; line-height: 1.5; }
+
+/* CONCLUSION */
+.conclusion-block { background: var(--accent); color: #fff; border-radius: var(--radius); padding: 20px 28px; margin-bottom: 20px; }
+.conclusion-block p { font-family: 'DM Serif Display', serif; font-size: 1.15rem; line-height: 1.5; }
 
 .disclaimer { font-size: 11px; color: var(--ink-light); text-align: center; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--paper-dark); line-height: 1.6; }
-
 .btn-reset { display: block; margin: 24px auto 0; background: transparent; border: 1px solid var(--border); color: var(--ink-light); padding: 10px 24px; border-radius: var(--radius); cursor: pointer; font-size: 13px; transition: border-color 0.2s, color 0.2s; }
 .btn-reset:hover { border-color: var(--accent); color: var(--accent); }
 
@@ -141,9 +148,9 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--ink-li
 
 <header>
   <div class="logo-block">
-    <div class="logo-eyebrow">Herramienta para estudios contables</div>
+    <div class="logo-eyebrow">Análisis Financiero Experto</div>
     <div class="logo-name">Balance<em>Simple</em></div>
-    <div class="logo-tagline">Tu balance en palabras que cualquiera entiende</div>
+    <div class="logo-tagline">Estados Contables analizados con criterio de CFO, explicados en palabras simples</div>
   </div>
   <div class="header-badge">IA · OpenRouter</div>
 </header>
@@ -151,18 +158,18 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--ink-li
 <main>
 
   <div class="model-section">
-    <label class="upload-label">Elegí el modelo de IA</label>
+    <label class="section-label">Elegí el modelo de IA</label>
     <div class="model-grid" id="modelGrid"></div>
     <div class="model-used-note" id="modelUsedNote"></div>
   </div>
 
   <div class="upload-section">
-    <label class="upload-label upload-label-block">Subí el balance en PDF</label>
+    <label class="section-label" style="margin-bottom:10px">Subí los Estados Contables en PDF</label>
     <div class="drop-zone" id="dropZone">
       <input type="file" id="fileInput" accept=".pdf" />
       <span class="drop-icon">📄</span>
       <div class="drop-text-main">Arrastrá el PDF acá o hacé click para elegirlo</div>
-      <div class="drop-text-sub">Balance general, estado de resultados o ambos · Máx. 10 MB</div>
+      <div class="drop-text-sub">Balance general, Estado de resultados · Con datos comparativos · Máx. 10 MB</div>
     </div>
     <div class="file-selected" id="fileSelected">
       <span>✅</span>
@@ -171,29 +178,39 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--ink-li
   </div>
 
   <button class="btn-analyze" id="btnAnalyze" disabled onclick="analyzeBalance()">
-    Analizar balance →
+    Analizar Estados Contables →
   </button>
 
   <div class="loading-bar" id="loadingBar"><div class="loading-fill"></div></div>
-  <div class="loading-msg" id="loadingMsg">Extrayendo texto del PDF y consultando a la IA… puede tardar unos segundos.</div>
+  <div class="loading-msg" id="loadingMsg">Extrayendo datos y realizando análisis financiero completo… puede tardar unos segundos.</div>
   <div class="error-box" id="errorBox"></div>
 
   <hr class="results-divider" id="resultsDivider" style="display:none" />
 
   <section id="results">
-    <div class="results-header">
-      <span class="results-title">Diagnóstico de tu empresa</span>
-      <span class="results-subtitle">generado por IA</span>
+
+    <div class="periodo-header">
+      <span class="periodo-label">Diagnóstico Financiero</span>
+      <span class="periodo-badge periodo-actual" id="periodoActual">—</span>
+      <span class="periodo-badge periodo-anterior" id="periodoAnterior">—</span>
     </div>
+
     <div class="alerts-grid" id="alertsGrid"></div>
-    <div class="narrative-block" id="narrativeBlock"></div>
+
+    <div class="block" id="summaryBlock"></div>
+    <div class="block" id="evolucionBlock"></div>
+    <div class="block" id="highlightsBlock"></div>
+    <div class="block" id="concernsBlock"></div>
+    <div class="block critico" id="criticoBlock" style="display:none"></div>
     <div class="recommendations" id="recoBlock"></div>
+    <div class="conclusion-block" id="conclusionBlock"></div>
+
     <div class="disclaimer">
-      ⚠️ Este análisis es orientativo y fue generado por inteligencia artificial a partir del documento subido.
-      No reemplaza el criterio de un contador matriculado. Consultá siempre a tu profesional de confianza
-      antes de tomar decisiones financieras.
+      ⚠️ Este análisis fue generado por inteligencia artificial a partir del documento subido y tiene carácter orientativo.
+      No reemplaza el criterio de un contador público o analista financiero matriculado.
+      Consultá siempre a tu profesional de confianza antes de tomar decisiones financieras.
     </div>
-    <button class="btn-reset" onclick="resetApp()">← Analizar otro balance</button>
+    <button class="btn-reset" onclick="resetApp()">← Analizar otros Estados Contables</button>
   </section>
 
 </main>
@@ -203,7 +220,6 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--ink-li
 </footer>
 
 <script>
-// Configurar PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 const MODELS = [
@@ -223,7 +239,6 @@ function buildModelGrid() {
     const card = document.createElement("button");
     card.className = "model-card" + (m.id === selectedModel ? " selected" : "");
     card.setAttribute("type", "button");
-    card.dataset.id = m.id;
     card.innerHTML = `
       <span class="model-badge ${m.tier}">${m.tier === "free" ? "Gratis" : "Pago"}</span>
       <span class="model-info">
@@ -243,14 +258,11 @@ const dropZone = document.getElementById("dropZone");
 dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("drag-over"); });
 dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
 dropZone.addEventListener("drop", (e) => {
-  e.preventDefault();
-  dropZone.classList.remove("drag-over");
+  e.preventDefault(); dropZone.classList.remove("drag-over");
   const f = e.dataTransfer.files[0];
   if (f && f.type === "application/pdf") setFile(f);
 });
-document.getElementById("fileInput").addEventListener("change", (e) => {
-  if (e.target.files[0]) setFile(e.target.files[0]);
-});
+document.getElementById("fileInput").addEventListener("change", (e) => { if (e.target.files[0]) setFile(e.target.files[0]); });
 
 function setFile(f) {
   selectedFile = f;
@@ -261,18 +273,13 @@ function setFile(f) {
 }
 
 function hideError() { document.getElementById("errorBox").classList.remove("visible"); }
-function showError(msg) {
-  const box = document.getElementById("errorBox");
-  box.textContent = msg;
-  box.classList.add("visible");
-}
+function showError(msg) { const b = document.getElementById("errorBox"); b.textContent = msg; b.classList.add("visible"); }
 function setLoading(active) {
   document.getElementById("loadingBar").classList.toggle("active", active);
   document.getElementById("loadingMsg").classList.toggle("active", active);
   document.getElementById("btnAnalyze").disabled = active;
 }
 
-// Extraer texto del PDF usando PDF.js
 async function extractTextFromPDF(file) {
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -280,8 +287,7 @@ async function extractTextFromPDF(file) {
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-    const pageText = content.items.map((item) => item.str).join(" ");
-    fullText += pageText + "\n";
+    fullText += content.items.map((item) => item.str).join(" ") + "\n";
   }
   return fullText.trim();
 }
@@ -295,12 +301,8 @@ async function analyzeBalance() {
   document.getElementById("modelUsedNote").classList.remove("visible");
 
   try {
-    // Extraer texto del PDF en el browser
     const pdfText = await extractTextFromPDF(selectedFile);
-
-    if (!pdfText || pdfText.length < 50) {
-      throw new Error("No se pudo extraer texto del PDF. Verificá que el archivo tenga texto seleccionable y no sea una imagen escaneada sin OCR.");
-    }
+    if (!pdfText || pdfText.length < 50) throw new Error("No se pudo extraer texto del PDF. Verificá que el archivo tenga texto seleccionable.");
 
     const response = await fetch("/.netlify/functions/analyze", {
       method: "POST",
@@ -309,55 +311,113 @@ async function analyzeBalance() {
     });
 
     const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || `Error del servidor (${response.status})`);
-    }
+    if (!response.ok) throw new Error(data.error || `Error del servidor (${response.status})`);
 
     const usedModel = MODELS.find((m) => m.id === data.modelUsed);
     const note = document.getElementById("modelUsedNote");
-    if (usedModel && data.modelUsed !== selectedModel) {
-      note.textContent = `ℹ️ Se usó ${usedModel.name} como alternativa (el modelo seleccionado no estuvo disponible).`;
-      note.classList.add("visible");
-    } else if (usedModel) {
-      note.textContent = `✅ Análisis generado con ${usedModel.name}.`;
+    if (usedModel) {
+      note.textContent = data.modelUsed !== selectedModel
+        ? `ℹ️ Se usó ${usedModel.name} como alternativa (el modelo seleccionado no estuvo disponible).`
+        : `✅ Análisis generado con ${usedModel.name}.`;
       note.classList.add("visible");
     }
 
     renderResults(data.result);
   } catch (err) {
-    showError("Ocurrió un error al analizar el balance:\n" + err.message);
+    showError("Ocurrió un error al analizar los Estados Contables:\n" + err.message);
   } finally {
     setLoading(false);
   }
 }
 
+function plazoClass(plazo) {
+  if (!plazo) return "noventa";
+  const p = plazo.toLowerCase();
+  if (p.includes("inmediato")) return "inmediato";
+  if (p.includes("30")) return "treinta";
+  if (p.includes("90")) return "noventa";
+  if (p.includes("6")) return "seis";
+  return "noventa";
+}
+
 function renderResults(data) {
+  // Periodo
+  if (data.periodo) {
+    document.getElementById("periodoActual").textContent = data.periodo.actual || "Período actual";
+    document.getElementById("periodoAnterior").textContent = data.periodo.anterior || "Período anterior";
+  }
+
+  // Alerts
   const grid = document.getElementById("alertsGrid");
   grid.innerHTML = "";
   (data.alerts || []).forEach((a) => {
     const card = document.createElement("div");
     card.className = `alert-card ${a.status || "ok"}`;
     card.innerHTML = `
-      <div class="alert-label">${a.label || a.status}</div>
+      <div class="alert-top">
+        <div class="alert-label">${a.label || a.status}</div>
+        ${a.variacion ? `<div class="alert-variacion">${a.variacion}</div>` : ""}
+      </div>
       <div class="alert-name">${a.name}</div>
-      <div class="alert-value">${a.value}</div>
+      <div class="alert-values">
+        <div class="alert-value-actual">${a.value_actual || a.value || "—"}</div>
+        ${a.value_anterior ? `<div class="alert-value-anterior">ant: ${a.value_anterior}</div>` : ""}
+      </div>
       <div class="alert-desc">${a.description}</div>`;
     grid.appendChild(card);
   });
 
-  const narrative = document.getElementById("narrativeBlock");
+  // Summary
+  document.getElementById("summaryBlock").innerHTML = `<h3>📊 Panorama general</h3><p>${data.summary || ""}</p>`;
+
+  // Evolución
+  if (data.evolucion) {
+    document.getElementById("evolucionBlock").innerHTML = `<h3>📈 Evolución vs año anterior</h3><p>${data.evolucion}</p>`;
+    document.getElementById("evolucionBlock").style.display = "block";
+  } else {
+    document.getElementById("evolucionBlock").style.display = "none";
+  }
+
+  // Highlights & Concerns
   const highlights = (data.highlights || []).map((h) => `<li>${h}</li>`).join("");
   const concerns   = (data.concerns   || []).map((c) => `<li>${c}</li>`).join("");
-  narrative.innerHTML = `
-    <h3>📊 Panorama general</h3>
-    <p>${data.summary || ""}</p>
-    ${highlights ? `<h3 style="margin-top:18px">✅ Puntos fuertes</h3><ul>${highlights}</ul>` : ""}
-    ${concerns   ? `<h3 style="margin-top:18px">⚠️ Puntos a mejorar</h3><ul>${concerns}</ul>`   : ""}`;
+  document.getElementById("highlightsBlock").innerHTML = highlights ? `<h3>✅ Puntos fuertes</h3><ul>${highlights}</ul>` : "";
+  document.getElementById("concernsBlock").innerHTML   = concerns   ? `<h3>⚠️ Puntos a mejorar</h3><ul>${concerns}</ul>`   : "";
 
+  // Alertas críticas
+  const criticas = data.alertas_criticas || [];
+  const criticoBlock = document.getElementById("criticoBlock");
+  if (criticas.length > 0) {
+    criticoBlock.innerHTML = `<h3>🚨 Alertas críticas</h3><ul>${criticas.map((c) => `<li>${c}</li>`).join("")}</ul>`;
+    criticoBlock.style.display = "block";
+  } else {
+    criticoBlock.style.display = "none";
+  }
+
+  // Recomendaciones
   const recos = document.getElementById("recoBlock");
-  const recoItems = (data.recommendations || []).map((r) => `<li>${r}</li>`).join("");
-  recos.innerHTML = `<h3>💡 Qué hacer ahora</h3><ul>${recoItems}</ul>`;
+  const recoItems = (data.recommendations || []).map((r) => {
+    const plazo = typeof r === "string" ? "90 días" : r.plazo || "90 días";
+    const accion = typeof r === "string" ? r : r.accion || r;
+    const impacto = typeof r === "object" ? r.impacto || "" : "";
+    return `
+      <div class="reco-item">
+        <div class="reco-top">
+          <div class="reco-accion">${accion}</div>
+          <div class="reco-plazo ${plazoClass(plazo)}">${plazo}</div>
+        </div>
+        ${impacto ? `<div class="reco-impacto">${impacto}</div>` : ""}
+      </div>`;
+  }).join("");
+  recos.innerHTML = `<h3>💡 Plan de acción</h3>${recoItems}`;
+
+  // Conclusión
+  if (data.conclusion) {
+    document.getElementById("conclusionBlock").innerHTML = `<p>"${data.conclusion}"</p>`;
+    document.getElementById("conclusionBlock").style.display = "block";
+  } else {
+    document.getElementById("conclusionBlock").style.display = "none";
+  }
 
   document.getElementById("results").classList.add("visible");
   document.getElementById("resultsDivider").style.display = "block";
