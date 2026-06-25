@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>BalanceSimple — Tu balance en palabras claras</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
@@ -35,7 +36,6 @@ body {
   flex-direction: column;
 }
 
-/* ── HEADER ── */
 header {
   background: var(--ink);
   color: #fff;
@@ -45,380 +45,96 @@ header {
   gap: 16px;
 }
 .logo-block { flex: 1; }
-.logo-eyebrow {
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: #8888aa;
-  margin-bottom: 4px;
-}
-.logo-name {
-  font-family: 'DM Serif Display', serif;
-  font-size: 2rem;
-  line-height: 1;
-  color: #fff;
-}
+.logo-eyebrow { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #8888aa; margin-bottom: 4px; }
+.logo-name { font-family: 'DM Serif Display', serif; font-size: 2rem; line-height: 1; color: #fff; }
 .logo-name em { font-style: italic; color: #93c5fd; }
-.logo-tagline {
-  font-size: 12px;
-  color: #8888aa;
-  margin-top: 6px;
-  font-weight: 300;
-}
-.header-badge {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  background: #2563eb22;
-  border: 1px solid #2563eb55;
-  color: #93c5fd;
-  padding: 4px 10px;
-  border-radius: 4px;
-}
+.logo-tagline { font-size: 12px; color: #8888aa; margin-top: 6px; font-weight: 300; }
+.header-badge { font-family: 'JetBrains Mono', monospace; font-size: 10px; background: #2563eb22; border: 1px solid #2563eb55; color: #93c5fd; padding: 4px 10px; border-radius: 4px; }
 
-/* ── MAIN ── */
-main {
-  flex: 1;
-  max-width: 780px;
-  margin: 0 auto;
-  padding: 48px 24px;
-  width: 100%;
-}
+main { flex: 1; max-width: 780px; margin: 0 auto; padding: 48px 24px; width: 100%; }
 
-/* ── MODEL SELECTOR ── */
-.model-section {
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px 24px;
-  margin-bottom: 24px;
-}
-.model-section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-.upload-label {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-light);
-  display: block;
-}
-.model-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
+.model-section { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 24px; }
+.upload-label { font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-light); display: block; }
+.model-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
 @media (max-width: 520px) { .model-grid { grid-template-columns: 1fr; } }
 
-.model-card {
-  border: 2px solid var(--border);
-  border-radius: 8px;
-  padding: 12px 14px;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  text-align: left;
-  background: transparent;
-}
+.model-card { border: 2px solid var(--border); border-radius: 8px; padding: 12px 14px; cursor: pointer; transition: border-color 0.15s, background 0.15s; display: flex; align-items: flex-start; gap: 10px; text-align: left; background: transparent; }
 .model-card:hover { border-color: var(--accent); background: var(--accent-soft); }
 .model-card.selected { border-color: var(--accent); background: var(--accent-soft); }
-
-.model-badge {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 2px 6px;
-  border-radius: 3px;
-  white-space: nowrap;
-  margin-top: 2px;
-  flex-shrink: 0;
-}
+.model-badge { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 2px 6px; border-radius: 3px; white-space: nowrap; margin-top: 2px; flex-shrink: 0; }
 .model-badge.free { background: var(--ok-soft); color: var(--ok); }
 .model-badge.paid { background: var(--warn-soft); color: var(--warn); }
-
 .model-info { flex: 1; min-width: 0; }
-.model-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink);
-  margin-bottom: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+.model-name { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .model-desc { font-size: 11px; color: var(--ink-light); line-height: 1.4; }
-
-.model-used-note {
-  display: none;
-  font-size: 11px;
-  color: var(--ink-light);
-  margin-top: 10px;
-  font-style: italic;
-}
+.model-used-note { display: none; font-size: 11px; color: var(--ink-light); margin-top: 10px; font-style: italic; }
 .model-used-note.visible { display: block; }
 
-/* ── UPLOAD ZONE ── */
 .upload-section { margin-bottom: 32px; }
 .upload-label-block { margin-bottom: 10px; }
-
-.drop-zone {
-  border: 2px dashed var(--border);
-  border-radius: var(--radius);
-  background: #fff;
-  padding: 48px 24px;
-  text-align: center;
-  cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
-  position: relative;
-}
-.drop-zone:hover, .drop-zone.drag-over {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-}
-.drop-zone input[type="file"] {
-  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-}
+.drop-zone { border: 2px dashed var(--border); border-radius: var(--radius); background: #fff; padding: 48px 24px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; position: relative; }
+.drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent); background: var(--accent-soft); }
+.drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
 .drop-icon { font-size: 2.5rem; margin-bottom: 12px; display: block; }
-.drop-text-main {
-  font-family: 'DM Serif Display', serif;
-  font-size: 1.1rem;
-  color: var(--ink);
-  margin-bottom: 4px;
-}
+.drop-text-main { font-family: 'DM Serif Display', serif; font-size: 1.1rem; color: var(--ink); margin-bottom: 4px; }
 .drop-text-sub { font-size: 12px; color: var(--ink-light); }
-
-.file-selected {
-  display: none;
-  align-items: center;
-  gap: 10px;
-  justify-content: center;
-  padding: 16px;
-  background: var(--ok-soft);
-  border: 2px solid var(--ok);
-  border-radius: var(--radius);
-}
+.file-selected { display: none; align-items: center; gap: 10px; justify-content: center; padding: 16px; background: var(--ok-soft); border: 2px solid var(--ok); border-radius: var(--radius); }
 .file-selected.visible { display: flex; }
-.file-selected-name {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  color: var(--ok);
-  font-weight: 500;
-}
+.file-selected-name { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ok); font-weight: 500; }
 
-/* ── BUTTON ── */
-.btn-analyze {
-  width: 100%;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius);
-  padding: 16px 24px;
-  font-family: 'Inter', sans-serif;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
-  margin-top: 16px;
-  letter-spacing: 0.02em;
-}
+.btn-analyze { width: 100%; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); padding: 16px 24px; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.1s; margin-top: 16px; letter-spacing: 0.02em; }
 .btn-analyze:hover:not(:disabled) { background: #1d4ed8; }
 .btn-analyze:active:not(:disabled) { transform: scale(0.99); }
 .btn-analyze:disabled { background: #93c5fd; cursor: not-allowed; }
 
-/* ── LOADING ── */
-.loading-bar {
-  display: none;
-  margin-top: 20px;
-  background: var(--paper-dark);
-  border-radius: 4px;
-  height: 4px;
-  overflow: hidden;
-}
+.loading-bar { display: none; margin-top: 20px; background: var(--paper-dark); border-radius: 4px; height: 4px; overflow: hidden; }
 .loading-bar.active { display: block; }
-.loading-fill {
-  height: 100%;
-  background: var(--accent);
-  border-radius: 4px;
-  animation: load 2.5s ease-in-out infinite;
-  width: 40%;
-}
-@keyframes load {
-  0%   { transform: translateX(-100%); }
-  100% { transform: translateX(350%); }
-}
-.loading-msg {
-  display: none;
-  text-align: center;
-  font-size: 13px;
-  color: var(--ink-light);
-  margin-top: 10px;
-  font-style: italic;
-}
+.loading-fill { height: 100%; background: var(--accent); border-radius: 4px; animation: load 2.5s ease-in-out infinite; width: 40%; }
+@keyframes load { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } }
+.loading-msg { display: none; text-align: center; font-size: 13px; color: var(--ink-light); margin-top: 10px; font-style: italic; }
 .loading-msg.active { display: block; }
 
-/* ── ERROR ── */
-.error-box {
-  display: none;
-  background: var(--danger-soft);
-  border: 1px solid var(--danger);
-  border-radius: var(--radius);
-  padding: 16px 20px;
-  margin-top: 16px;
-  font-size: 13px;
-  color: var(--danger);
-  line-height: 1.5;
-  white-space: pre-wrap;
-}
+.error-box { display: none; background: var(--danger-soft); border: 1px solid var(--danger); border-radius: var(--radius); padding: 16px 20px; margin-top: 16px; font-size: 13px; color: var(--danger); line-height: 1.5; white-space: pre-wrap; }
 .error-box.visible { display: block; }
 
-/* ── RESULTS ── */
 #results { display: none; }
 #results.visible { display: block; }
+.results-divider { border: none; border-top: 2px solid var(--border); margin: 40px 0; }
+.results-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 28px; }
+.results-title { font-family: 'DM Serif Display', serif; font-size: 1.6rem; color: var(--ink); }
+.results-subtitle { font-size: 12px; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.1em; }
 
-.results-divider {
-  border: none;
-  border-top: 2px solid var(--border);
-  margin: 40px 0;
-}
-.results-header {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  margin-bottom: 28px;
-}
-.results-title {
-  font-family: 'DM Serif Display', serif;
-  font-size: 1.6rem;
-  color: var(--ink);
-}
-.results-subtitle {
-  font-size: 12px;
-  color: var(--ink-light);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-
-/* ── ALERTS ── */
-.alerts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
-  margin-bottom: 32px;
-}
-.alert-card {
-  border-radius: var(--radius);
-  padding: 16px 18px;
-  border-left: 4px solid;
-}
+.alerts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 32px; }
+.alert-card { border-radius: var(--radius); padding: 16px 18px; border-left: 4px solid; }
 .alert-card.ok     { background: var(--ok-soft);     border-color: var(--ok); }
 .alert-card.warn   { background: var(--warn-soft);   border-color: var(--warn); }
 .alert-card.danger { background: var(--danger-soft); border-color: var(--danger); }
-
-.alert-label {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  margin-bottom: 4px;
-}
+.alert-label { font-size: 10px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px; }
 .alert-card.ok .alert-label     { color: var(--ok); }
 .alert-card.warn .alert-label   { color: var(--warn); }
 .alert-card.danger .alert-label { color: var(--danger); }
-
 .alert-name  { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
 .alert-value { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 500; margin-bottom: 4px; }
 .alert-desc  { font-size: 12px; color: var(--ink-light); line-height: 1.4; }
 
-/* ── NARRATIVE ── */
-.narrative-block {
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 28px 32px;
-  margin-bottom: 24px;
-}
-.narrative-block h3 {
-  font-family: 'DM Serif Display', serif;
-  font-size: 1.1rem;
-  margin-bottom: 14px;
-  color: var(--ink);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.narrative-block p, .narrative-block li {
-  font-size: 14px;
-  line-height: 1.7;
-  color: var(--ink);
-}
+.narrative-block { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 32px; margin-bottom: 24px; }
+.narrative-block h3 { font-family: 'DM Serif Display', serif; font-size: 1.1rem; margin-bottom: 14px; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+.narrative-block p, .narrative-block li { font-size: 14px; line-height: 1.7; color: var(--ink); }
 .narrative-block ul { padding-left: 18px; margin-top: 8px; }
 .narrative-block li { margin-bottom: 6px; }
 
-/* ── RECOMMENDATIONS ── */
-.recommendations {
-  background: var(--ink);
-  color: #fff;
-  border-radius: var(--radius);
-  padding: 28px 32px;
-  margin-bottom: 24px;
-}
-.recommendations h3 {
-  font-family: 'DM Serif Display', serif;
-  font-size: 1.1rem;
-  margin-bottom: 14px;
-  color: #93c5fd;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.recommendations p, .recommendations li {
-  font-size: 14px;
-  line-height: 1.7;
-  color: #d1d5db;
-}
+.recommendations { background: var(--ink); color: #fff; border-radius: var(--radius); padding: 28px 32px; margin-bottom: 24px; }
+.recommendations h3 { font-family: 'DM Serif Display', serif; font-size: 1.1rem; margin-bottom: 14px; color: #93c5fd; display: flex; align-items: center; gap: 8px; }
+.recommendations p, .recommendations li { font-size: 14px; line-height: 1.7; color: #d1d5db; }
 .recommendations ul { padding-left: 18px; margin-top: 8px; }
 .recommendations li { margin-bottom: 6px; }
 
-/* ── DISCLAIMER ── */
-.disclaimer {
-  font-size: 11px;
-  color: var(--ink-light);
-  text-align: center;
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--paper-dark);
-  line-height: 1.6;
-}
+.disclaimer { font-size: 11px; color: var(--ink-light); text-align: center; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--paper-dark); line-height: 1.6; }
 
-/* ── RESET ── */
-.btn-reset {
-  display: block;
-  margin: 24px auto 0;
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--ink-light);
-  padding: 10px 24px;
-  border-radius: var(--radius);
-  cursor: pointer;
-  font-size: 13px;
-  transition: border-color 0.2s, color 0.2s;
-}
+.btn-reset { display: block; margin: 24px auto 0; background: transparent; border: 1px solid var(--border); color: var(--ink-light); padding: 10px 24px; border-radius: var(--radius); cursor: pointer; font-size: 13px; transition: border-color 0.2s, color 0.2s; }
 .btn-reset:hover { border-color: var(--accent); color: var(--accent); }
 
-footer {
-  text-align: center;
-  padding: 24px;
-  font-size: 11px;
-  color: var(--ink-light);
-  border-top: 1px solid var(--border);
-}
+footer { text-align: center; padding: 24px; font-size: 11px; color: var(--ink-light); border-top: 1px solid var(--border); }
 </style>
 </head>
 <body>
@@ -434,16 +150,12 @@ footer {
 
 <main>
 
-  <!-- MODEL SELECTOR -->
   <div class="model-section">
-    <div class="model-section-header">
-      <label class="upload-label">Elegí el modelo de IA</label>
-    </div>
+    <label class="upload-label">Elegí el modelo de IA</label>
     <div class="model-grid" id="modelGrid"></div>
     <div class="model-used-note" id="modelUsedNote"></div>
   </div>
 
-  <!-- UPLOAD -->
   <div class="upload-section">
     <label class="upload-label upload-label-block">Subí el balance en PDF</label>
     <div class="drop-zone" id="dropZone">
@@ -463,7 +175,7 @@ footer {
   </button>
 
   <div class="loading-bar" id="loadingBar"><div class="loading-fill"></div></div>
-  <div class="loading-msg" id="loadingMsg">La IA está leyendo tu balance… puede tardar unos segundos.</div>
+  <div class="loading-msg" id="loadingMsg">Extrayendo texto del PDF y consultando a la IA… puede tardar unos segundos.</div>
   <div class="error-box" id="errorBox"></div>
 
   <hr class="results-divider" id="resultsDivider" style="display:none" />
@@ -491,39 +203,19 @@ footer {
 </footer>
 
 <script>
-// ── MODEL DEFINITIONS ──────────────────────────────────────────────────────
+// Configurar PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
 const MODELS = [
-  {
-    id: "google/gemini-2.0-flash-exp:free",
-    name: "Gemini 2.0 Flash",
-    desc: "Recomendado · Rápido, contexto amplio",
-    tier: "free",
-    default: true,
-  },
-  {
-    id: "meta-llama/llama-3.3-70b-instruct:free",
-    name: "Llama 3.3 70B",
-    desc: "Muy capaz · Alta precisión",
-    tier: "free",
-  },
-  {
-    id: "anthropic/claude-sonnet-4-5",
-    name: "Claude Sonnet 4.5",
-    desc: "Alta precisión · Uso de créditos",
-    tier: "paid",
-  },
-  {
-    id: "openai/gpt-4o",
-    name: "GPT-4o",
-    desc: "Referencia del sector · Uso de créditos",
-    tier: "paid",
-  },
+  { id: "google/gemini-2.0-flash-exp:free", name: "Gemini 2.0 Flash", desc: "Recomendado · Rápido, contexto amplio", tier: "free", default: true },
+  { id: "meta-llama/llama-3.3-70b-instruct:free", name: "Llama 3.3 70B", desc: "Muy capaz · Alta precisión", tier: "free" },
+  { id: "anthropic/claude-sonnet-4-5", name: "Claude Sonnet 4.5", desc: "Alta precisión · Uso de créditos", tier: "paid" },
+  { id: "openai/gpt-4o", name: "GPT-4o", desc: "Referencia del sector · Uso de créditos", tier: "paid" },
 ];
 
 let selectedModel = MODELS.find((m) => m.default)?.id || MODELS[0].id;
 let selectedFile = null;
 
-// ── BUILD MODEL SELECTOR ────────────────────────────────────────────────────
 function buildModelGrid() {
   const grid = document.getElementById("modelGrid");
   grid.innerHTML = "";
@@ -547,7 +239,6 @@ function buildModelGrid() {
   });
 }
 
-// ── DRAG & DROP ─────────────────────────────────────────────────────────────
 const dropZone = document.getElementById("dropZone");
 dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("drag-over"); });
 dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
@@ -569,7 +260,6 @@ function setFile(f) {
   hideError();
 }
 
-// ── UI HELPERS ───────────────────────────────────────────────────────────────
 function hideError() { document.getElementById("errorBox").classList.remove("visible"); }
 function showError(msg) {
   const box = document.getElementById("errorBox");
@@ -582,7 +272,20 @@ function setLoading(active) {
   document.getElementById("btnAnalyze").disabled = active;
 }
 
-// ── ANALYZE ──────────────────────────────────────────────────────────────────
+// Extraer texto del PDF usando PDF.js
+async function extractTextFromPDF(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let fullText = "";
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items.map((item) => item.str).join(" ");
+    fullText += pageText + "\n";
+  }
+  return fullText.trim();
+}
+
 async function analyzeBalance() {
   if (!selectedFile) return;
   hideError();
@@ -592,12 +295,17 @@ async function analyzeBalance() {
   document.getElementById("modelUsedNote").classList.remove("visible");
 
   try {
-    const pdfBase64 = await fileToBase64(selectedFile);
+    // Extraer texto del PDF en el browser
+    const pdfText = await extractTextFromPDF(selectedFile);
+
+    if (!pdfText || pdfText.length < 50) {
+      throw new Error("No se pudo extraer texto del PDF. Verificá que el archivo tenga texto seleccionable y no sea una imagen escaneada sin OCR.");
+    }
 
     const response = await fetch("/.netlify/functions/analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pdfBase64, preferredModel: selectedModel }),
+      body: JSON.stringify({ pdfText, preferredModel: selectedModel }),
     });
 
     const data = await response.json();
@@ -606,7 +314,6 @@ async function analyzeBalance() {
       throw new Error(data.error || `Error del servidor (${response.status})`);
     }
 
-    // Show which model was actually used (may differ from selected if fallback occurred)
     const usedModel = MODELS.find((m) => m.id === data.modelUsed);
     const note = document.getElementById("modelUsedNote");
     if (usedModel && data.modelUsed !== selectedModel) {
@@ -619,14 +326,12 @@ async function analyzeBalance() {
 
     renderResults(data.result);
   } catch (err) {
-    showError("Ocurrió un error al analizar el balance:\n" + err.message +
-      "\n\nVerificá que el PDF sea un balance contable con texto seleccionable (no escaneado sin OCR).");
+    showError("Ocurrió un error al analizar el balance:\n" + err.message);
   } finally {
     setLoading(false);
   }
 }
 
-// ── RENDER ────────────────────────────────────────────────────────────────────
 function renderResults(data) {
   const grid = document.getElementById("alertsGrid");
   grid.innerHTML = "";
@@ -659,7 +364,6 @@ function renderResults(data) {
   document.getElementById("results").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-// ── RESET ─────────────────────────────────────────────────────────────────────
 function resetApp() {
   selectedFile = null;
   document.getElementById("fileInput").value = "";
@@ -672,17 +376,6 @@ function resetApp() {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-// ── UTILS ─────────────────────────────────────────────────────────────────────
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(",")[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-// ── INIT ──────────────────────────────────────────────────────────────────────
 buildModelGrid();
 </script>
 </body>
