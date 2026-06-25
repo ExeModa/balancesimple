@@ -148,9 +148,9 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--ink-li
 
 <header>
   <div class="logo-block">
-    <div class="logo-eyebrow">Análisis Financiero Experto</div>
+    <div class="logo-eyebrow">Análisis Financiero de Renta Variable</div>
     <div class="logo-name">Balance<em>Simple</em></div>
-    <div class="logo-tagline">Estados Contables analizados con criterio de CFO, explicados en palabras simples</div>
+    <div class="logo-tagline">Estados financieros de empresas cotizantes analizados con criterio de analista buy-side</div>
   </div>
   <div class="header-badge">IA · OpenRouter</div>
 </header>
@@ -164,12 +164,12 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--ink-li
   </div>
 
   <div class="upload-section">
-    <label class="section-label" style="margin-bottom:10px">Subí los Estados Contables en PDF</label>
+    <label class="section-label" style="margin-bottom:10px">Subí el reporte financiero en PDF</label>
     <div class="drop-zone" id="dropZone">
       <input type="file" id="fileInput" accept=".pdf" />
       <span class="drop-icon">📄</span>
       <div class="drop-text-main">Arrastrá el PDF acá o hacé click para elegirlo</div>
-      <div class="drop-text-sub">Balance general, Estado de resultados · Con datos comparativos · Máx. 10 MB</div>
+      <div class="drop-text-sub">10-K · 20-F · Reporte anual · Earnings release · Con datos comparativos · Máx. 10 MB</div>
     </div>
     <div class="file-selected" id="fileSelected">
       <span>✅</span>
@@ -178,11 +178,11 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--ink-li
   </div>
 
   <button class="btn-analyze" id="btnAnalyze" disabled onclick="analyzeBalance()">
-    Analizar Estados Contables →
+    Analizar Reporte Financiero →
   </button>
 
   <div class="loading-bar" id="loadingBar"><div class="loading-fill"></div></div>
-  <div class="loading-msg" id="loadingMsg">Extrayendo datos y realizando análisis financiero completo… puede tardar unos segundos.</div>
+  <div class="loading-msg" id="loadingMsg">Analizando fundamentales, valuación, calidad de resultados y señales de riesgo… puede tardar unos segundos.</div>
   <div class="error-box" id="errorBox"></div>
 
   <hr class="results-divider" id="resultsDivider" style="display:none" />
@@ -199,6 +199,7 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--ink-li
 
     <div class="block" id="summaryBlock"></div>
     <div class="block" id="evolucionBlock"></div>
+    <div class="block" id="earningsQualityBlock"></div>
     <div class="block" id="highlightsBlock"></div>
     <div class="block" id="concernsBlock"></div>
     <div class="block critico" id="criticoBlock" style="display:none"></div>
@@ -207,10 +208,10 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--ink-li
 
     <div class="disclaimer">
       ⚠️ Este análisis fue generado por inteligencia artificial a partir del documento subido y tiene carácter orientativo.
-      No reemplaza el criterio de un contador público o analista financiero matriculado.
-      Consultá siempre a tu profesional de confianza antes de tomar decisiones financieras.
+      No constituye asesoramiento financiero ni recomendación de inversión. Las decisiones de inversión implican riesgos.
+      Consultá siempre a un asesor financiero matriculado antes de tomar decisiones de compra o venta de activos.
     </div>
-    <button class="btn-reset" onclick="resetApp()">← Analizar otros Estados Contables</button>
+    <button class="btn-reset" onclick="resetApp()">← Analizar otro reporte</button>
   </section>
 
 </main>
@@ -302,7 +303,7 @@ async function analyzeBalance() {
 
   try {
     const pdfText = await extractTextFromPDF(selectedFile);
-    if (!pdfText || pdfText.length < 50) throw new Error("No se pudo extraer texto del PDF. Verificá que el archivo tenga texto seleccionable.");
+    if (!pdfText || pdfText.length < 50) throw new Error("No se pudo extraer texto del PDF. Verificá que el archivo tenga texto seleccionable (no escaneado). Los reportes 10-K, 20-F y earnings releases digitales funcionan correctamente.");
 
     const response = await fetch("/.netlify/functions/analyze", {
       method: "POST",
@@ -376,6 +377,14 @@ function renderResults(data) {
     document.getElementById("evolucionBlock").style.display = "block";
   } else {
     document.getElementById("evolucionBlock").style.display = "none";
+  }
+
+  // Calidad de resultados (nuevo)
+  if (data.earnings_quality) {
+    document.getElementById("earningsQualityBlock").innerHTML = `<h3>🔍 Calidad de los resultados</h3><p>${data.earnings_quality}</p>`;
+    document.getElementById("earningsQualityBlock").style.display = "block";
+  } else {
+    document.getElementById("earningsQualityBlock").style.display = "none";
   }
 
   // Highlights & Concerns
