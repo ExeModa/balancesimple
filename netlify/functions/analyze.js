@@ -1,5 +1,5 @@
 // netlify/functions/analyze.js
-// Proxies PDF analysis requests to OpenRouter, with automatic model fallback.
+// Recibe texto extraído del PDF y lo analiza con OpenRouter con fallback automático.
 
 const FREE_MODELS = [
   "google/gemini-2.0-flash-exp:free",
@@ -39,13 +39,13 @@ Siempre respondés ÚNICAMENTE con un objeto JSON válido, sin markdown, sin tex
 
 Incluí entre 3 y 5 alertas. Cubrí: liquidez, endeudamiento, rentabilidad, capital de trabajo, y cualquier otra métrica relevante. Si no podés calcular una métrica, omitila. Los valores en "value" deben ser números concretos. El lenguaje debe ser el de un buen amigo contador, no el de un informe técnico.`;
 
-async function callOpenRouter(apiKey, model, pdfBase64) {
+async function callOpenRouter(apiKey, model, pdfText) {
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${apiKey}`,
       "Content-Type": "application/json",
-      "HTTP-Referer": "https://balancesimple.netlify.app",
+      "HTTP-Referer": "https://stupendous-jalebi-a78dd2.netlify.app",
       "X-Title": "BalanceSimple",
     },
     body: JSON.stringify({
@@ -55,18 +55,7 @@ async function callOpenRouter(apiKey, model, pdfBase64) {
         { role: "system", content: SYSTEM_PROMPT },
         {
           role: "user",
-          content: [
-            {
-              type: "text",
-              text: "Analizá este balance y generá el JSON con el diagnóstico para el dueño de la empresa.",
-            },
-            {
-              type: "image_url",
-              image_url: {
-                url: `data:application/pdf;base64,${pdfBase64}`,
-              },
-            },
-          ],
+          content: `Analizá este balance y generá el JSON con el diagnóstico para el dueño de la empresa.\n\nCONTENIDO DEL BALANCE:\n${pdfText}`,
         },
       ],
     }),
@@ -115,13 +104,19 @@ exports.handler = async (event) => {
     return { statusCode: 400, headers, body: JSON.stringify({ error: "Body inválido." }) };
   }
 
-  const { pdfBase64, preferredModel } = body;
+  const { pdfText, preferredModel } = body;
 
-  if (!pdfBase64) {
-    return { statusCode: 400, headers, body: JSON.stringify({ error: "Falta el PDF." }) };
+  if (!pdfText || pdfText.trim().length < 50) {
+    return {
+      statusCode: 400,
+      headers,
+      body: JSON.stringify({ error: "No se pudo extraer texto del PDF. Asegurate de que el PDF tenga texto seleccionable (no sea una imagen escaneada sin OCR)." }),
+    };
   }
 
-  // Build model queue: preferred first, then fallbacks
+  // Truncate to avoid token limits (keep first 12000 chars ~3000 tokens)
+  const truncated = pdfText.slice(0, 12000);
+
   const startModel = preferredModel && ALL_MODELS.includes(preferredModel)
     ? preferredModel
     : FREE_MODELS[0];
@@ -131,9 +126,8 @@ exports.handler = async (event) => {
   let lastError = "";
   for (const model of queue) {
     try {
-      const { text, model: usedModel } = await callOpenRouter(apiKey, model, pdfBase64);
+      const { text, model: usedModel } = await callOpenRouter(apiKey, model, truncated);
 
-      // Strip markdown fences if present
       const clean = text.replace(/```json|```/g, "").trim();
       const result = JSON.parse(clean);
 
@@ -145,7 +139,6 @@ exports.handler = async (event) => {
     } catch (err) {
       lastError = err.message;
       console.warn(`Model ${model} failed: ${err.message} — trying next...`);
-      // Continue to next model
     }
   }
 
