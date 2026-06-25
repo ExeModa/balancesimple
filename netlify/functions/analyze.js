@@ -1,5 +1,5 @@
 // netlify/functions/analyze.js
-// Recibe texto extraído del PDF y lo analiza con OpenRouter con fallback automático.
+// Analiza EECC con prompt de experto financiero y fallback automático de modelos.
 
 const FREE_MODELS = [
   "google/gemini-2.0-flash-exp:free",
@@ -17,27 +17,68 @@ const PAID_MODELS = [
 
 const ALL_MODELS = [...FREE_MODELS, ...PAID_MODELS];
 
-const SYSTEM_PROMPT = `Sos un contador público con 20 años de experiencia explicando balances a dueños de PyMEs y empresas que no tienen formación contable. Tu trabajo es traducir el lenguaje técnico contable a español claro, directo y sin jerga.
+const SYSTEM_PROMPT = `Sos un analista financiero senior con 25 años de experiencia en análisis de Estados Contables de PyMEs y empresas medianas en Argentina y Latinoamérica. Tu especialidad es traducir la información financiera compleja en diagnósticos claros, accionables y comprensibles para dueños de empresas sin formación contable.
 
-Siempre respondés ÚNICAMENTE con un objeto JSON válido, sin markdown, sin texto extra antes o después. El JSON tiene exactamente esta estructura:
+Analizás los Estados Contables con la rigurosidad de un CFO y la claridad de un buen consultor de negocios.
+
+METODOLOGÍA DE ANÁLISIS:
+Cuando recibís un balance con dos períodos comparativos, analizás:
+
+1. LIQUIDEZ: Razón corriente, prueba ácida, capital de trabajo neto. Evaluás si la empresa puede pagar sus deudas de corto plazo.
+
+2. ENDEUDAMIENTO Y SOLVENCIA: Ratio deuda/patrimonio, deuda total sobre activos, cobertura de intereses. Determinás qué tan apalancada está la empresa y si es sostenible.
+
+3. RENTABILIDAD: ROE (retorno sobre patrimonio), ROA (retorno sobre activos), margen neto, margen bruto si hay datos disponibles. Evaluás si la empresa genera valor para sus dueños.
+
+4. EFICIENCIA OPERATIVA: Rotación de activos, rotación de inventarios (días), plazo de cobro (días), plazo de pago (días), ciclo de conversión de caja. Identificás cuellos de botella operativos.
+
+5. EVOLUCIÓN INTERANUAL: Comparás cada indicador clave entre el ejercicio actual y el anterior. Calculás variaciones porcentuales y determinás si la tendencia es positiva, negativa o estable.
+
+6. FLUJO DE FONDOS IMPLÍCITO: A partir del balance, estimás si la empresa está generando o consumiendo caja, y por qué.
+
+7. SEÑALES DE ALERTA: Identificás banderas rojas como descalce de plazos, deterioro del capital de trabajo, endeudamiento creciente, caída de rentabilidad, o activos improductivos.
+
+REGLAS DE RESPUESTA:
+- Respondés ÚNICAMENTE con un objeto JSON válido, sin markdown, sin texto extra antes o después.
+- Si un dato no está disponible para calcular un indicador, lo omitís (no inventás valores).
+- Los valores numéricos deben ser concretos (ej: "1.8x", "32%", "45 días"), nunca "N/D" ni rangos.
+- El lenguaje debe ser directo, sin jerga técnica innecesaria. Como si le explicaras a un amigo dueño de empresa.
+- Cuando hay dos períodos, siempre mencionás la variación ("mejoró un 15% vs el año anterior").
+
+El JSON tiene exactamente esta estructura:
 
 {
+  "periodo": {
+    "actual": "Ejercicio actual (año o fecha si está disponible)",
+    "anterior": "Ejercicio anterior (año o fecha si está disponible)"
+  },
   "alerts": [
     {
-      "name": "Liquidez corriente",
-      "value": "1.8x",
+      "name": "Nombre del indicador",
+      "value_actual": "Valor período actual",
+      "value_anterior": "Valor período anterior",
+      "variacion": "+12% vs año anterior",
       "status": "ok|warn|danger",
       "label": "SALUDABLE|ATENCIÓN|CRÍTICO",
-      "description": "Explicación en una oración, para alguien sin formación contable."
+      "description": "Explicación en una oración para el dueño de la empresa, mencionando la tendencia."
     }
   ],
-  "summary": "Párrafo de 3-5 oraciones explicando la situación general de la empresa en lenguaje simple. Empezá con lo más importante. Sin tecnicismos.",
-  "highlights": ["punto positivo 1", "punto positivo 2"],
-  "concerns": ["preocupación 1", "preocupación 2"],
-  "recommendations": ["recomendación accionable 1", "recomendación accionable 2", "recomendación accionable 3"]
+  "summary": "Párrafo de 5-7 oraciones resumiendo la situación financiera de la empresa. Empezá con el diagnóstico más importante. Incluí la evolución respecto al año anterior. Sin tecnicismos.",
+  "evolucion": "Párrafo de 3-4 oraciones describiendo específicamente qué mejoró y qué empeoró respecto al ejercicio anterior, con números concretos.",
+  "highlights": ["punto positivo con número concreto 1", "punto positivo con número concreto 2", "punto positivo con número concreto 3"],
+  "concerns": ["preocupación concreta con número 1", "preocupación concreta con número 2"],
+  "alertas_criticas": ["señal de alerta grave si existe, sino array vacío"],
+  "recommendations": [
+    {
+      "accion": "Qué hacer exactamente",
+      "plazo": "Inmediato|30 días|90 días|6 meses",
+      "impacto": "Por qué es importante para el negocio"
+    }
+  ],
+  "conclusion": "Una sola oración que resuma el estado de salud financiera de la empresa de forma directa y honesta."
 }
 
-Incluí entre 3 y 5 alertas. Cubrí: liquidez, endeudamiento, rentabilidad, capital de trabajo, y cualquier otra métrica relevante. Si no podés calcular una métrica, omitila. Los valores en "value" deben ser números concretos. El lenguaje debe ser el de un buen amigo contador, no el de un informe técnico.`;
+Incluí entre 5 y 8 alertas cubriendo liquidez, endeudamiento, rentabilidad, eficiencia y evolución interanual. Incluí entre 3 y 5 recomendaciones ordenadas por prioridad.`;
 
 async function callOpenRouter(apiKey, model, pdfText) {
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -50,12 +91,12 @@ async function callOpenRouter(apiKey, model, pdfText) {
     },
     body: JSON.stringify({
       model,
-      max_tokens: 1500,
+      max_tokens: 2500,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         {
           role: "user",
-          content: `Analizá este balance y generá el JSON con el diagnóstico para el dueño de la empresa.\n\nCONTENIDO DEL BALANCE:\n${pdfText}`,
+          content: `Analizá estos Estados Contables y generá el JSON con el diagnóstico financiero completo.\n\nESTADOS CONTABLES:\n${pdfText}`,
         },
       ],
     }),
@@ -80,73 +121,38 @@ exports.handler = async (event) => {
     "Content-Type": "application/json",
   };
 
-  if (event.httpMethod === "OPTIONS") {
-    return { statusCode: 200, headers, body: "" };
-  }
-
-  if (event.httpMethod !== "POST") {
-    return { statusCode: 405, headers, body: JSON.stringify({ error: "Método no permitido." }) };
-  }
+  if (event.httpMethod === "OPTIONS") return { statusCode: 200, headers, body: "" };
+  if (event.httpMethod !== "POST") return { statusCode: 405, headers, body: JSON.stringify({ error: "Método no permitido." }) };
 
   const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: "API key no configurada en el servidor." }),
-    };
-  }
+  if (!apiKey) return { statusCode: 500, headers, body: JSON.stringify({ error: "API key no configurada en el servidor." }) };
 
   let body;
-  try {
-    body = JSON.parse(event.body);
-  } catch {
-    return { statusCode: 400, headers, body: JSON.stringify({ error: "Body inválido." }) };
-  }
+  try { body = JSON.parse(event.body); }
+  catch { return { statusCode: 400, headers, body: JSON.stringify({ error: "Body inválido." }) }; }
 
   const { pdfText, preferredModel } = body;
 
   if (!pdfText || pdfText.trim().length < 50) {
-    return {
-      statusCode: 400,
-      headers,
-      body: JSON.stringify({ error: "No se pudo extraer texto del PDF. Asegurate de que el PDF tenga texto seleccionable (no sea una imagen escaneada sin OCR)." }),
-    };
+    return { statusCode: 400, headers, body: JSON.stringify({ error: "No se pudo extraer texto del PDF. Asegurate de que el archivo tenga texto seleccionable." }) };
   }
 
-  // Truncate to avoid token limits (keep first 12000 chars ~3000 tokens)
-  const truncated = pdfText.slice(0, 12000);
-
-  const startModel = preferredModel && ALL_MODELS.includes(preferredModel)
-    ? preferredModel
-    : FREE_MODELS[0];
-
+  const truncated = pdfText.slice(0, 15000);
+  const startModel = preferredModel && ALL_MODELS.includes(preferredModel) ? preferredModel : FREE_MODELS[0];
   const queue = [startModel, ...ALL_MODELS.filter((m) => m !== startModel)];
 
   let lastError = "";
   for (const model of queue) {
     try {
       const { text, model: usedModel } = await callOpenRouter(apiKey, model, truncated);
-
       const clean = text.replace(/```json|```/g, "").trim();
       const result = JSON.parse(clean);
-
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({ result, modelUsed: usedModel }),
-      };
+      return { statusCode: 200, headers, body: JSON.stringify({ result, modelUsed: usedModel }) };
     } catch (err) {
       lastError = err.message;
       console.warn(`Model ${model} failed: ${err.message} — trying next...`);
     }
   }
 
-  return {
-    statusCode: 502,
-    headers,
-    body: JSON.stringify({
-      error: `No se pudo obtener análisis con ningún modelo disponible. Último error: ${lastError}`,
-    }),
-  };
+  return { statusCode: 502, headers, body: JSON.stringify({ error: `No se pudo obtener análisis. Último error: ${lastError}` }) };
 };
