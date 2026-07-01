@@ -177,6 +177,20 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--ink-li
     </div>
   </div>
 
+  <div class="upload-section" style="margin-bottom:24px">
+    <label class="section-label" style="margin-bottom:10px">Ticker (opcional)</label>
+    <input
+      type="text"
+      id="tickerInput"
+      placeholder="Ej: AAPL, MSFT, GGAL — dejalo vacío si no aplica"
+      style="width:100%; border:2px solid var(--border); border-radius:8px; padding:12px 14px; font-family:'JetBrains Mono', monospace; font-size:13px; color:var(--ink); background:#fff;"
+      maxlength="10"
+    />
+    <div style="font-size:11px; color:var(--ink-light); margin-top:6px;">
+      Si lo indicás, la app intenta traer precio y capitalización de mercado en tiempo real para completar la valuación relativa. Si no se encuentra el ticker, el análisis continúa igual solo con los datos del PDF.
+    </div>
+  </div>
+
   <button class="btn-analyze" id="btnAnalyze" disabled onclick="analyzeBalance()">
     Analizar Reporte Financiero →
   </button>
@@ -194,6 +208,8 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--ink-li
       <span class="periodo-badge periodo-actual" id="periodoActual">—</span>
       <span class="periodo-badge periodo-anterior" id="periodoAnterior">—</span>
     </div>
+
+    <div class="block" id="marketDataBlock" style="display:none"></div>
 
     <div class="alerts-grid" id="alertsGrid"></div>
 
@@ -308,7 +324,11 @@ async function analyzeBalance() {
     const response = await fetch("/.netlify/functions/analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pdfText, preferredModel: selectedModel }),
+      body: JSON.stringify({
+        pdfText,
+        preferredModel: selectedModel,
+        ticker: document.getElementById("tickerInput").value.trim(),
+      }),
     });
 
     const data = await response.json();
@@ -323,7 +343,7 @@ async function analyzeBalance() {
       note.classList.add("visible");
     }
 
-    renderResults(data.result);
+    renderResults(data.result, data.marketData);
   } catch (err) {
     showError("Ocurrió un error al analizar los Estados Contables:\n" + err.message);
   } finally {
@@ -341,7 +361,28 @@ function plazoClass(plazo) {
   return "noventa";
 }
 
-function renderResults(data) {
+function renderResults(data, marketData) {
+  // Datos de mercado en tiempo real (opcional — solo si vino ticker y se encontró)
+  const marketBlock = document.getElementById("marketDataBlock");
+  if (marketData) {
+    const cambio = marketData.variacionDiaria;
+    const cambioTxt = cambio !== null && cambio !== undefined
+      ? `${cambio > 0 ? "+" : ""}${cambio.toFixed(2)}%`
+      : "—";
+    const cambioColor = cambio > 0 ? "var(--ok)" : cambio < 0 ? "var(--danger)" : "var(--ink-light)";
+    const capTxt = marketData.marketCap ? `$${(marketData.marketCap / 1_000_000_000).toFixed(2)}B` : "—";
+    marketBlock.innerHTML = `
+      <h3>📡 Datos de mercado en tiempo real — ${marketData.ticker}</h3>
+      <p style="display:flex; gap:24px; flex-wrap:wrap; font-family:'JetBrains Mono', monospace;">
+        <span><strong>Precio:</strong> ${marketData.precio ? `$${marketData.precio} ${marketData.moneda}` : "—"}</span>
+        <span style="color:${cambioColor}"><strong>Var. diaria:</strong> ${cambioTxt}</span>
+        <span><strong>Market Cap:</strong> ${capTxt}</span>
+      </p>`;
+    marketBlock.style.display = "block";
+  } else {
+    marketBlock.style.display = "none";
+  }
+
   // Periodo
   if (data.periodo) {
     document.getElementById("periodoActual").textContent = data.periodo.actual || "Período actual";
@@ -436,6 +477,7 @@ function renderResults(data) {
 function resetApp() {
   selectedFile = null;
   document.getElementById("fileInput").value = "";
+  document.getElementById("tickerInput").value = "";
   document.getElementById("fileSelected").classList.remove("visible");
   document.getElementById("results").classList.remove("visible");
   document.getElementById("resultsDivider").style.display = "none";
