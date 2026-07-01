@@ -59,7 +59,7 @@ y devuelve JSON estructurado → la app renderiza el diagnóstico visual
 
 ```
 balancesimple/
-├── balance-simple.html          # Frontend (HTML + CSS + JS en un solo archivo)
+├── index.html          # Frontend (HTML + CSS + JS en un solo archivo)
 ├── netlify/
 │   └── functions/
 │       └── analyze.js           # Backend serverless: prompt de sistema + llamada a OpenRouter
