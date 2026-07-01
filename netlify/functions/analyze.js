@@ -17,6 +17,75 @@ const PAID_MODELS = [
 
 const ALL_MODELS = [...FREE_MODELS, ...PAID_MODELS];
 
+// ─────────────────────────────────────────────────────────────
+// ENRIQUECIMIENTO OPCIONAL: cotización y capitalización de mercado
+// en tiempo real (Finnhub). Es un plus, no un requisito: si no hay
+// ticker, no hay API key configurada, o la consulta falla por
+// cualquier motivo, el análisis sigue su curso normal solo con los
+// datos del PDF, sin lanzar error.
+// ─────────────────────────────────────────────────────────────
+async function getMarketData(ticker) {
+  const apiKey = process.env.FINNHUB_API_KEY;
+  if (!apiKey || !ticker) return null;
+
+  const cleanTicker = String(ticker).trim().toUpperCase();
+  if (!cleanTicker || !/^[A-Z.\-]{1,10}$/.test(cleanTicker)) return null;
+
+  try {
+    const [quoteRes, profileRes] = await Promise.all([
+      fetch(`https://finnhub.io/api/v1/quote?symbol=${cleanTicker}&token=${apiKey}`),
+      fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${cleanTicker}&token=${apiKey}`),
+    ]);
+
+    if (!quoteRes.ok || !profileRes.ok) return null;
+
+    const quote = await quoteRes.json();
+    const profile = await profileRes.json();
+
+    // Finnhub devuelve {} (objeto vacío) o c:0 cuando el ticker no existe,
+    // en vez de un error HTTP — hay que detectarlo explícitamente.
+    const precio = typeof quote.c === "number" && quote.c > 0 ? quote.c : null;
+    const variacionDiaria = typeof quote.dp === "number" ? quote.dp : null;
+    // marketCapitalization de Finnhub viene expresada en millones.
+    const marketCap = typeof profile.marketCapitalization === "number"
+      ? profile.marketCapitalization * 1_000_000
+      : null;
+
+    if (precio === null && marketCap === null) return null;
+
+    return {
+      ticker: cleanTicker,
+      nombre: profile.name || cleanTicker,
+      precio,
+      variacionDiaria,
+      marketCap,
+      moneda: profile.currency || "USD",
+    };
+  } catch (err) {
+    console.warn(`No se pudo obtener datos de mercado para ${cleanTicker}: ${err.message}`);
+    return null;
+  }
+}
+
+function formatMarketDataForPrompt(marketData) {
+  if (!marketData) return "";
+
+  const capFmt = marketData.marketCap ? `$${(marketData.marketCap / 1_000_000_000).toFixed(2)}B` : "no disponible";
+  const changeFmt = marketData.variacionDiaria !== null
+    ? `${marketData.variacionDiaria > 0 ? "+" : ""}${marketData.variacionDiaria.toFixed(2)}%`
+    : "no disponible";
+  const priceFmt = marketData.precio ? `$${marketData.precio} ${marketData.moneda}` : "no disponible";
+
+  return `
+
+DATOS DE MERCADO EN TIEMPO REAL (${marketData.ticker} — ${marketData.nombre}):
+- Precio actual: ${priceFmt}
+- Variación diaria: ${changeFmt}
+- Capitalización de mercado: ${capFmt}
+
+Usá estos datos de mercado para calcular la sección "2. RELATIVE VALUATION" (P/E, EV/EBITDA, P/S, P/FCF) combinándolos con las cifras del estado financiero. Si el precio o el market cap no están disponibles, omitilos y aclaralo en vez de estimarlos.`;
+}
+
 const SYSTEM_PROMPT = `You are a senior equity analyst with 25 years of experience covering publicly traded companies across global markets — NYSE, NASDAQ, LSE, Euronext, TSX, ASX, BCBA, B3, and emerging market exchanges. You combine the rigor of a buy-side analyst with the clarity of a trusted advisor. Your specialty is translating financial statements into investment-grade diagnoses: identifying whether a company's fundamentals support a buy, hold, or sell thesis.
 
 CONTEXT:
@@ -137,7 +206,7 @@ OUTPUT JSON STRUCTURE (respond with exactly this shape):
 
 Include between 6 and 8 alerts covering: fundamental analysis (2–3), financial health (2), earnings quality (1), and momentum/valuation (1–2). Include 3 to 5 recommendations ordered by urgency. Always include the "earnings_quality" field.`;
 
-async function callOpenRouter(apiKey, model, pdfText) {
+async function callOpenRouter(apiKey, model, pdfText, marketDataText) {
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -153,7 +222,7 @@ async function callOpenRouter(apiKey, model, pdfText) {
         { role: "system", content: SYSTEM_PROMPT },
         {
           role: "user",
-          content: `Analizá estos Estados Contables y generá el JSON con el diagnóstico financiero completo.\n\nESTADOS CONTABLES:\n${pdfText}`,
+          content: `Analizá estos Estados Contables y generá el JSON con el diagnóstico financiero completo.\n\nESTADOS CONTABLES:\n${pdfText}${marketDataText || ""}`,
         },
       ],
     }),
@@ -188,23 +257,34 @@ exports.handler = async (event) => {
   try { body = JSON.parse(event.body); }
   catch { return { statusCode: 400, headers, body: JSON.stringify({ error: "Body inválido." }) }; }
 
-  const { pdfText, preferredModel } = body;
+  const { pdfText, preferredModel, ticker } = body;
 
   if (!pdfText || pdfText.trim().length < 50) {
     return { statusCode: 400, headers, body: JSON.stringify({ error: "No se pudo extraer texto del PDF. Asegurate de que el archivo tenga texto seleccionable." }) };
   }
 
   const truncated = pdfText.slice(0, 15000);
+
+  // Enriquecimiento opcional con datos de mercado. Nunca bloquea ni
+  // rompe el flujo: si no hay ticker o falla la consulta, marketData
+  // queda en null y el análisis sigue solo con el PDF.
+  const marketData = await getMarketData(ticker);
+  const marketDataText = formatMarketDataForPrompt(marketData);
+
   const startModel = preferredModel && ALL_MODELS.includes(preferredModel) ? preferredModel : FREE_MODELS[0];
   const queue = [startModel, ...ALL_MODELS.filter((m) => m !== startModel)];
 
   let lastError = "";
   for (const model of queue) {
     try {
-      const { text, model: usedModel } = await callOpenRouter(apiKey, model, truncated);
+      const { text, model: usedModel } = await callOpenRouter(apiKey, model, truncated, marketDataText);
       const clean = text.replace(/```json|```/g, "").trim();
       const result = JSON.parse(clean);
-      return { statusCode: 200, headers, body: JSON.stringify({ result, modelUsed: usedModel }) };
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ result, modelUsed: usedModel, marketData: marketData || null }),
+      };
     } catch (err) {
       lastError = err.message;
       console.warn(`Model ${model} failed: ${err.message} — trying next...`);
